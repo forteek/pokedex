@@ -1,82 +1,98 @@
-from .devices.display import Display
-from .devices.filesystem import Filesystem, filesystem
-from .devices.camera import Camera
-from .devices.speaker import Speaker
-from .devices.button import Button
-from .devices.led import Led
+from collections.abc import Callable
+import logging
+import time
 
 import pygame
-from dataclasses import dataclass
 
-@dataclass
-class Views:
-    left: pygame.Surface
-    right: pygame.Surface
+from .devices.camera import Camera
+from .devices.display import DisplayDevice, PygameDisplay
+from .devices.filesystem import Filesystem
+from .devices.input import InputDevice, PygameInput
+from .devices.speaker import Speaker
+from .modes.base import Mode, ModeContext, ModeRequest
+from .modes.menu import Menu
 
-@dataclass
-class Devices:
-    filesystem: Filesystem
-    camera: Camera
-    speaker: Speaker
-    display: Display
 
-@dataclass
-class Controls:
-    left: Button
-    right: Button
-    up: Button
-    down: Button
-    ok: Button
-    home: Button
-    scan: Button
+logger = logging.getLogger(__name__)
+ModeFactory = Callable[[ModeContext], Mode]
 
-@dataclass
-class Leds:
-    red: Led
-    yellow: Led
-    green: Led
 
 class App:
-    def __init__(self):
-        pygame.init()
-        self.window = pygame.display.set_mode((640, 240))
-        pygame.display.set_caption("Pokedex")
-        self.views = Views(
-            pygame.Surface((320, 240)),
-            pygame.Surface((320, 240)),
+    def __init__(
+        self,
+        input_device: InputDevice | None = None,
+        display_device: DisplayDevice | None = None,
+        mode_factories: dict[str, ModeFactory] | None = None,
+        filesystem: Filesystem | None = None,
+        camera: Camera | None = None,
+        speaker: Speaker | None = None,
+        frame_rate: int = 60,
+    ):
+        self.filesystem = filesystem or Filesystem()
+        self.filesystem.prepare_user_directories()
+        self.context = ModeContext(
+            filesystem=self.filesystem,
+            camera=camera or Camera(),
+            speaker=speaker or Speaker(),
         )
-        self.devices = Devices(
-            filesystem,
-            Camera(),
-            Speaker(),
-            Display(),
-        )
-        self.controls = Controls(
-            Button(pygame.K_LEFT),
-            Button(pygame.K_RIGHT),
-            Button(pygame.K_UP),
-            Button(pygame.K_DOWN),
-            Button(pygame.K_q),
-            Button(pygame.K_w),
-            Button(pygame.K_e),
-        )
-        self.leds = Leds(
-            Led(0),
-            Led(1),
-            Led(2),
-        )
-        self.clock = pygame.time.Clock()
-        self.running = True
 
-    def run(self):
+        self._owns_pygame = input_device is None or display_device is None
+        if self._owns_pygame:
+            pygame.init()
+
+        self.input = input_device or PygameInput()
+        self.display = display_device or PygameDisplay()
+        if frame_rate <= 0:
+            raise ValueError("frame_rate must be positive")
+        self.frame_rate = frame_rate
+        self.running = False
+
+        self.mode_factories = (
+            {"menu": lambda context: Menu(context)}
+            if mode_factories is None
+            else mode_factories
+        )
+        if "menu" not in self.mode_factories:
+            raise ValueError("mode_factories must include a 'menu' factory")
+        self.mode: Mode = self.mode_factories["menu"](self.context)
+
+    def run(self) -> None:
+        self.running = True
+        frame_duration = 1 / self.frame_rate
+        previous_frame = time.monotonic()
         try:
             while self.running:
-                self.clock.tick(60)
+                frame_start = time.monotonic()
+                delta_time = min(max(frame_start - previous_frame, 0.0), 0.1)
+                previous_frame = frame_start
+
+                frame = self.input.poll()
+                if frame.quit_requested:
+                    self.running = False
+                    continue
+
+                request = self.mode.update(frame.actions, delta_time)
+                if request is not None:
+                    self._apply_mode_request(request)
+
+                self.mode.render(self.display)
+                remaining = frame_duration - (time.monotonic() - frame_start)
+                if remaining > 0:
+                    time.sleep(remaining)
         finally:
-            pygame.quit()
+            if self._owns_pygame:
+                pygame.quit()
+
+    def stop(self) -> None:
+        self.running = False
+
+    def _apply_mode_request(self, request: ModeRequest) -> None:
+        factory = self.mode_factories.get(request.target)
+        if factory is None:
+            logger.info("Ignoring request for unregistered mode '%s'", request.target)
+            return
+        self.mode = factory(self.context)
 
 
-
-def run():
-    app = App()
-    print(1)
+def run() -> None:
+    App().run()
