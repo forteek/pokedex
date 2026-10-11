@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="128mm"
+   height="128mm"
+   viewBox="0 0 128 128"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="gallery.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   inkscape:export-filename="../png/gallery.png"
+   inkscape:export-xdpi="25.4"
+   inkscape:export-ydpi="25.4"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.1519648"
+     inkscape:cx="235.68429"
+     inkscape:cy="257.82038"
+     inkscape:window-width="1400"
+     inkscape:window-height="1045"
+     inkscape:window-x="0"
+     inkscape:window-y="40"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#4c82d9"
+       id="background"
+       width="120"
+       height="120"
+       x="4"
+       y="4"
+       rx="12" />
+    <circle
+       style="fill:#948c32"
+       id="sun-outline"
+       cx="100"
+       cy="28"
+       r="12" />
+    <circle
+       style="fill:#d9cd4c"
+       id="sun-background"
+       cx="100"
+       cy="28"
+       r="10" />
+    <circle
+       style="fill:#ebebeb"
+       id="sun-reflection"
+       cx="104"
+       cy="24"
+       r="2" />
+    <circle
+       style="fill:#008000"
+       id="mountain-1-top-outline"
+       cx="32"
+       cy="46"
+       r="12" />
+    <circle
+       style="fill:#008000"
+       id="mountain-2-top-outline"
+       cx="104"
+       cy="70"
+       r="12" />
+    <polygon
+       id="mountain-background"
+       points="2,62 26,40 38,40 80,80 98,64 110,64 126,78 126,115 122,122 113,126 15,126 6,122 2,115"
+       style="fill:#64d94c" />
+    <line
+       id="mountain-1-left"
+       style="stroke:#008000;stroke-width:4;stroke-linecap:round"
+       x1="2"
+       y1="62"
+       x2="26"
+       y2="38" />
+    <line
+       id="mountain-1-right"
+       style="stroke:#008000;stroke-width:4;stroke-linecap:round"
+       x1="38"
+       y1="38"
+       x2="96"
+       y2="96" />
+    <line
+       id="mountain-2-left"
+       style="stroke:#008000;stroke-width:4;stroke-linecap:round"
+       x1="80"
+       y1="80"
+       x2="98"
+       y2="62" />
+    <line
+       id="mountain-2-right"
+       style="stroke:#008000;stroke-width:4;stroke-linecap:round"
+       x1="110"
+       y1="62"
+       x2="126"
+       y2="78" />
+    <circle
+       style="fill:#64d94c"
+       id="mountain-1-top-background"
+       cx="32"
+       cy="46"
+       r="8" />
+    <circle
+       style="fill:#64d94c"
+       id="mountain-2-top-background"
+       cx="104"
+       cy="70"
+       r="8" />
+    <rect
+       style="fill-opacity:0;stroke:#32538a;stroke-width:4"
+       id="outline-8"
+       width="124"
+       height="124"
+       x="2"
+       y="2"
+       rx="16" />
+  </g>
+</svg>

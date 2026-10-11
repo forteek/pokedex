@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="128mm"
+   height="128mm"
+   viewBox="0 0 128 128"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="pokedex.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   inkscape:export-filename="../png/pokedex.png"
+   inkscape:export-xdpi="25.4"
+   inkscape:export-ydpi="25.4"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.86565857"
+     inkscape:cx="88.372024"
+     inkscape:cy="263.96088"
+     inkscape:window-width="1360"
+     inkscape:window-height="1022"
+     inkscape:window-x="0"
+     inkscape:window-y="40"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#de3c3c"
+       id="background-top"
+       width="120"
+       height="62"
+       x="4"
+       y="4"
+       rx="8" />
+    <rect
+       style="fill:#ebebeb"
+       id="background-bottom"
+       width="120"
+       height="62"
+       x="4"
+       y="62"
+       rx="8" />
+    <line
+       id="divider-top"
+       x2="128"
+       x1="0"
+       y1="60"
+       y2="60"
+       style="stroke:#de3c3c;stroke-width:4" />
+    <line
+       id="divider-bottom"
+       x2="128"
+       x1="0"
+       y1="68"
+       y2="68"
+       style="stroke:#ebebeb;stroke-width:4" />
+    <line
+       id="divider"
+       x2="128"
+       x1="0"
+       y1="64"
+       y2="64"
+       style="stroke:#4e4e4e;stroke-width:4" />
+    <circle
+       style="fill:#4e4e4e"
+       id="button-outline"
+       cx="64"
+       cy="64"
+       r="24" />
+    <circle
+       style="fill:#ebebeb"
+       id="button-background"
+       cx="64"
+       cy="64"
+       r="20" />
+    <circle
+       style="fill-opacity:0;stroke:#cfcfcf;stroke-width:4"
+       id="button-depth"
+       cx="64"
+       cy="64"
+       r="12" />
+    <rect
+       style="fill-opacity:0;stroke:#8a2c2c;stroke-width:4"
+       id="outline"
+       width="124"
+       height="124"
+       x="2"
+       y="2"
+       rx="16" />
+  </g>
+</svg>

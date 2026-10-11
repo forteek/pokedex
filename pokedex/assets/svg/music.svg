@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="128mm"
+   height="128mm"
+   viewBox="0 0 128 128"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="music.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   inkscape:export-filename="../png/music.png"
+   inkscape:export-xdpi="25.4"
+   inkscape:export-ydpi="25.4"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.73879667"
+     inkscape:cx="262.58916"
+     inkscape:cy="238.902"
+     inkscape:window-width="1352"
+     inkscape:window-height="1048"
+     inkscape:window-x="0"
+     inkscape:window-y="40"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#8a502c"
+       id="outline"
+       width="128"
+       height="128"
+       x="0"
+       y="0"
+       rx="16" />
+    <rect
+       style="fill:#de6d3c"
+       id="background"
+       width="120"
+       height="120"
+       x="4"
+       y="4"
+       rx="12" />
+    <circle
+       style="fill:#363636"
+       id="record-outline"
+       cx="64"
+       cy="64"
+       r="48" />
+    <circle
+       style="fill:#4e4e4e"
+       id="record-background"
+       cx="64"
+       cy="64"
+       r="44" />
+    <circle
+       style="fill-opacity:0;stroke:#616161;stroke-width:4"
+       id="record-detail-1"
+       cx="64"
+       cy="64"
+       r="38" />
+    <circle
+       style="fill-opacity:0;stroke:#616161;stroke-width:4"
+       id="record-detail-2"
+       cx="64"
+       cy="64"
+       r="30" />
+    <circle
+       style="fill-opacity:0;stroke:#616161;stroke-width:4"
+       id="record-detail-3"
+       cx="64"
+       cy="64"
+       r="22" />
+    <circle
+       style="fill-opacity:0;stroke:#363636;stroke-width:12"
+       id="record-inner"
+       cx="64"
+       cy="64"
+       r="10" />
+    <circle
+       style="fill:#4e4e4e"
+       id="needle-base-outline"
+       cx="108"
+       cy="20"
+       r="8" />
+    <line
+       id="needle-background-1"
+       x1="108"
+       y1="10"
+       style="stroke:#484848;stroke-width:8;stroke-linecap:round"
+       x2="108"
+       y2="40" />
+    <line
+       id="needle-background-2"
+       x1="108"
+       y1="40"
+       style="stroke:#484848;stroke-width:8;stroke-linecap:round"
+       x2="98"
+       y2="50" />
+    <line
+       id="needle-1"
+       x1="108"
+       y1="10"
+       style="stroke:#bababa;stroke-width:4;stroke-linecap:round"
+       x2="108"
+       y2="40" />
+    <line
+       id="needle-head"
+       x1="98"
+       y1="50"
+       style="stroke:#363636;stroke-width:8;stroke-linecap:round"
+       x2="96"
+       y2="52" />
+    <line
+       id="needle-2"
+       x1="108"
+       y1="40"
+       style="stroke:#bababa;stroke-width:4;stroke-linecap:round"
+       x2="98"
+       y2="50" />
+    <circle
+       style="fill:#bababa"
+       id="needle-base-background"
+       cx="108"
+       cy="20"
+       r="6" />
+    <circle
+       style="fill:#ebebeb"
+       id="needle-base-reflection"
+       cx="110"
+       cy="18"
+       r="2" />
+  </g>
+</svg>
