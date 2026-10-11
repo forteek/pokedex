@@ -34,6 +34,7 @@ class App:
             filesystem=self.filesystem,
             camera=camera or Camera(),
             speaker=speaker or Speaker(),
+            default_background=self.filesystem.load_image_asset("bg.png"),
         )
 
         self._owns_pygame = input_device is None or display_device is None
@@ -75,7 +76,9 @@ class App:
                 if request is not None:
                     self._apply_mode_request(request)
 
+                self.context.draw_default_background(self.display)
                 self.mode.render(self.display)
+                self.display.present()
                 remaining = frame_duration - (time.monotonic() - frame_start)
                 if remaining > 0:
                     time.sleep(remaining)

@@ -69,9 +69,6 @@ class Menu:
         self._transition_elapsed = 0.0
 
     def render(self, display: DisplayDevice) -> None:
-        for panel in Panel:
-            display.clear(panel, (20, 24, 32))
-
         center_x = PANEL_SIZE[0] // 2
         gap = 105
         for index, option in enumerate(self.options):
@@ -82,4 +79,3 @@ class Menu:
             x = center_x + offset * gap - size // 2
             y = (PANEL_SIZE[1] - size) // 2
             display.draw_image(Panel.MAIN, option.image, (x, y, size, size))
-        display.present()

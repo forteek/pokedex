@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ..devices.camera import Camera
-from ..devices.display import DisplayDevice
+from ..devices.display import DisplayDevice, PANEL_SIZE, Panel
+from ..devices.filesystem import ImageAsset
 from ..devices.filesystem import Filesystem
 from ..devices.input import Action
 from ..devices.speaker import Speaker
@@ -20,6 +21,11 @@ class ModeContext:
     filesystem: Filesystem
     camera: Camera
     speaker: Speaker
+    default_background: ImageAsset
+
+    def draw_default_background(self, display: DisplayDevice) -> None:
+        for panel in Panel:
+            display.draw_image(panel, self.default_background, (0, 0, *PANEL_SIZE))
 
 
 class Mode(Protocol):

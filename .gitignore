@@ -2,3 +2,4 @@
 .venv
 *.egg-info
 uv.lock
+**/__pycache__
