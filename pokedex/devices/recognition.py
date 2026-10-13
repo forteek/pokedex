@@ -23,7 +23,7 @@ class OnnxPokemonRecognizer:
     """Lazy, quantized ONNX classifier for offline Pokémon image recognition."""
 
     INPUT_SIZE = (224, 224)
-    EXPECTED_POKEMON_IDS = frozenset(range(1, 1025))
+    EXPECTED_POKEMON_IDS = frozenset(range(1, 1026))
 
     def __init__(self, assets_dir: Path):
         self.model_path = assets_dir / "models" / "pokemon_classifier.onnx"
@@ -96,7 +96,7 @@ class OnnxPokemonRecognizer:
         except (AttributeError, KeyError, TypeError, ValueError) as error:
             raise ValueError("Pokémon model labels contain an invalid entry") from error
         if covered_ids != self.EXPECTED_POKEMON_IDS:
-            raise ValueError("Pokémon model labels must cover database IDs 1 through 1024")
+            raise ValueError("Pokémon model labels must cover database IDs 1 through 1025")
         self._labels = labels_data
 
         options = ort.SessionOptions()
