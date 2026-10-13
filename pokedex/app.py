@@ -4,13 +4,17 @@ import time
 
 import pygame
 
-from .devices.camera import Camera
+from .devices.camera import Camera, OpenCVCamera
 from .devices.display import DisplayDevice, PygameDisplay
 from .devices.filesystem import Filesystem
 from .devices.input import InputDevice, PygameInput
 from .devices.speaker import Speaker
 from .modes.base import Mode, ModeContext, ModeRequest
+from .modes.camera import CameraView
+from .modes.gallery import Gallery
 from .modes.menu import Menu
+from .modes.music import MusicPlayer
+from .modes.pokedex import Pokedex
 
 
 logger = logging.getLogger(__name__)
@@ -32,7 +36,7 @@ class App:
         self.filesystem.prepare_user_directories()
         self.context = ModeContext(
             filesystem=self.filesystem,
-            camera=camera or Camera(),
+            camera=camera or OpenCVCamera(),
             speaker=speaker or Speaker(),
             default_background=self.filesystem.load_image_asset("bg.png"),
         )
@@ -49,7 +53,13 @@ class App:
         self.running = False
 
         self.mode_factories = (
-            {"menu": lambda context: Menu(context)}
+            {
+                "menu": lambda context: Menu(context),
+                "camera": lambda context: CameraView(context),
+                "gallery": lambda context: Gallery(context),
+                "music": lambda context: MusicPlayer(context),
+                "pokedex": lambda context: Pokedex(context),
+            }
             if mode_factories is None
             else mode_factories
         )
@@ -83,6 +93,7 @@ class App:
                 if remaining > 0:
                     time.sleep(remaining)
         finally:
+            self._exit_mode(self.mode)
             if self._owns_pygame:
                 pygame.quit()
 
@@ -94,7 +105,14 @@ class App:
         if factory is None:
             logger.info("Ignoring request for unregistered mode '%s'", request.target)
             return
+        self._exit_mode(self.mode)
         self.mode = factory(self.context)
+
+    @staticmethod
+    def _exit_mode(mode: Mode) -> None:
+        on_exit = getattr(mode, "on_exit", None)
+        if on_exit is not None:
+            on_exit()
 
 
 def run() -> None:
