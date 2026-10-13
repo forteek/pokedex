@@ -65,6 +65,7 @@ class App:
         )
         if "menu" not in self.mode_factories:
             raise ValueError("mode_factories must include a 'menu' factory")
+        self._last_menu_mode: str | None = None
         self.mode: Mode = self.mode_factories["menu"](self.context)
 
     def run(self) -> None:
@@ -105,8 +106,12 @@ class App:
         if factory is None:
             logger.info("Ignoring request for unregistered mode '%s'", request.target)
             return
+        if isinstance(self.mode, Menu) and request.target != "menu":
+            self._last_menu_mode = request.target
         self._exit_mode(self.mode)
         self.mode = factory(self.context)
+        if request.target == "menu" and isinstance(self.mode, Menu):
+            self.mode.focus_mode(self._last_menu_mode)
 
     @staticmethod
     def _exit_mode(mode: Mode) -> None:

@@ -3,3 +3,5 @@
 *.egg-info
 uv.lock
 **/__pycache__
+pokedex/files/photos
+pokedex/files/music

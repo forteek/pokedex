@@ -31,6 +31,18 @@ class Menu:
     def focused_option(self) -> int:
         return self._target_position % len(self.options)
 
+    def focus_mode(self, mode: str | None) -> None:
+        if mode is None:
+            return
+
+        for index, option in enumerate(self.options):
+            if option.mode == mode:
+                self.position = float(index)
+                self._start_position = float(index)
+                self._target_position = index
+                self._transition_elapsed = self._transition_duration
+                return
+
     def update(self, actions: frozenset[Action], delta_time: float) -> ModeRequest | None:
         self._advance_transition(delta_time)
 
