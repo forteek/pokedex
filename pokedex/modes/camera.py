@@ -1,6 +1,7 @@
 from ..devices.display import DisplayDevice, PANEL_SIZE, Panel
 from ..devices.input import Action
 from .base import ModeContext, ModeRequest
+from .pokemon_scan import PokemonScanFlow
 
 
 class CameraView:
@@ -10,6 +11,7 @@ class CameraView:
     def __init__(self, context: ModeContext):
         self.context = context
         self.camera_available = context.camera.start()
+        self.scan_flow = PokemonScanFlow(context)
         self.camera_frame = None
         self.last_photo = None
         self._preview_elapsed = self.PREVIEW_INTERVAL
@@ -35,9 +37,17 @@ class CameraView:
         if Action.CONFIRM in actions and self.camera_available:
             photo = self.context.camera.capture()
             if photo is not None:
+                self.scan_flow.cancel()
                 self.last_photo = self.context.filesystem.save_photo(photo)
                 self._photo_transition_elapsed = 0.0
 
+        if (
+            Action.SCAN in actions
+            and self.last_photo is not None
+            and not self.scan_flow.is_scanning
+        ):
+            self.scan_flow.start(self.last_photo)
+        self.scan_flow.update(delta_time)
         return None
 
     def render(self, display: DisplayDevice) -> None:
@@ -62,7 +72,18 @@ class CameraView:
             height = round(54 + (PANEL_SIZE[1] - 54) * eased)
             x = (PANEL_SIZE[0] - width) // 2
             y = (PANEL_SIZE[1] - height) // 2
-            display.draw_image(Panel.CONTEXT, self.last_photo, (x, y, width, height))
+            display.draw_image(
+                Panel.CONTEXT,
+                self.last_photo,
+                (x, y, width, height),
+            )
+            self.scan_flow.render_scan_indicator(
+                display,
+                (x, y, width, height),
+            )
+
+        self.scan_flow.render_entry(display)
 
     def on_exit(self) -> None:
+        self.scan_flow.on_exit()
         self.context.camera.stop()

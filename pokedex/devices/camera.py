@@ -70,7 +70,7 @@ class OpenCVCamera:
         rgb = self._cv2.cvtColor(frame, self._cv2.COLOR_BGR2RGB)
         return CameraFrame(320, 240, rgb.tobytes())
 
-    def capture(self) -> bytes | None:
+    def capture(self) -> CapturedPhoto | None:
         if self._capture is None or self._cv2 is None:
             return None
 

@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "opencv-python-headless>=4.10",
+    "onnxruntime>=1.20",
     "pygame>=2.6.1",
 ]
 
@@ -27,4 +28,8 @@ pokedex = [
     "assets/mp3/names/*.mp3",
     "assets/mp3/types/*.mp3",
     "assets/mp3/flavor/*.mp3",
+    "assets/models/*.onnx",
+    "assets/models/*.json",
+    "assets/models/*.md",
+    "assets/models/*.txt",
 ]

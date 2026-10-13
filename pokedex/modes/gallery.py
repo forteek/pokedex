@@ -4,6 +4,7 @@ from ..devices.display import DisplayDevice, PANEL_SIZE, Panel
 from ..devices.filesystem import ImageAsset
 from ..devices.input import Action
 from .base import ModeContext, ModeRequest
+from .pokemon_scan import PokemonScanFlow
 
 
 class Gallery:
@@ -27,6 +28,7 @@ class Gallery:
         self._photo_transition_elapsed = self.PHOTO_TRANSITION_DURATION
         self._thumbnails: dict[str, ImageAsset] = {}
         self._full_photos: dict[int, ImageAsset] = {}
+        self.scan_flow = PokemonScanFlow(context)
         self._refresh_asset_window()
 
     @property
@@ -57,6 +59,13 @@ class Gallery:
             self._retarget_scroll()
             self._photo_transition_elapsed = 0.0
             self._refresh_asset_window()
+            self.scan_flow.cancel()
+
+        if Action.SCAN in actions and not self.scan_flow.is_scanning:
+            self._photo_transition_elapsed = self.PHOTO_TRANSITION_DURATION
+            self.scan_flow.start(self._full_photos[self.focused_index])
+
+        self.scan_flow.update(max(delta_time, 0.0))
         return None
 
     def _advance_animations(self, delta_time: float) -> None:
@@ -178,6 +187,14 @@ class Gallery:
         x = (PANEL_SIZE[0] - width) // 2
         y = (PANEL_SIZE[1] - height) // 2
         display.draw_image(Panel.CONTEXT, focused_photo, (x, y, width, height))
+        self.scan_flow.render_scan_indicator(
+            display,
+            (x, y, width, height),
+        )
+        self.scan_flow.render_entry(display)
+
+    def on_exit(self) -> None:
+        self.scan_flow.on_exit()
 
     def _ease_in_out(self, progress: float) -> float:
         if progress < 0.5:

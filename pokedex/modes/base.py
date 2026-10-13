@@ -6,6 +6,7 @@ from ..devices.display import DisplayDevice, PANEL_SIZE, Panel
 from ..devices.filesystem import ImageAsset
 from ..devices.filesystem import Filesystem
 from ..devices.input import Action
+from ..devices.recognition import PokemonRecognizer
 from ..devices.speaker import Speaker
 
 
@@ -21,6 +22,7 @@ class ModeContext:
     filesystem: Filesystem
     camera: Camera
     speaker: Speaker
+    pokemon_recognizer: PokemonRecognizer
     default_background: ImageAsset
 
     def draw_default_background(self, display: DisplayDevice) -> None:

@@ -22,7 +22,13 @@ class Panel(Enum):
 class DisplayDevice(Protocol):
     def clear(self, panel: Panel, color: tuple[int, int, int]) -> None: ...
 
-    def draw_image(self, panel: Panel, image: ImageAsset, rect: Rect) -> None: ...
+    def draw_image(
+        self,
+        panel: Panel,
+        image: ImageAsset,
+        rect: Rect,
+        alpha: int = 255,
+    ) -> None: ...
 
     def draw_rotated_image(
         self,
@@ -71,9 +77,25 @@ class PygameDisplay:
     def clear(self, panel: Panel, color: tuple[int, int, int]) -> None:
         self.panels[panel].fill(color)
 
-    def draw_image(self, panel: Panel, image_asset: ImageAsset, rect: Rect) -> None:
+    def draw_image(
+        self,
+        panel: Panel,
+        image_asset: ImageAsset,
+        rect: Rect,
+        alpha: int = 255,
+    ) -> None:
         x, y, width, height = rect
+        alpha = max(0, min(alpha, 255))
         scaled = self._scaled_image(image_asset, (width, height))
+        if alpha == 0:
+            return
+        if alpha < 255:
+            faded = scaled.copy()
+            faded.fill(
+                (255, 255, 255, alpha),
+                special_flags=pygame.BLEND_RGBA_MULT,
+            )
+            scaled = faded
         self.panels[panel].blit(scaled, (x, y))
 
     def draw_rotated_image(
@@ -107,7 +129,11 @@ class PygameDisplay:
                 self._cache_image(self._images, image_key, image, category)
             else:
                 self._images.move_to_end(image_key)
-            scaled = pygame.transform.smoothscale(image, (width, height))
+            scaled = (
+                image
+                if image.get_size() == (width, height)
+                else pygame.transform.smoothscale(image, (width, height))
+            )
             self._cache_image(self._scaled_images, scale_key, scaled, category)
         else:
             self._scaled_images.move_to_end(scale_key)

@@ -8,6 +8,7 @@ from .devices.camera import Camera, OpenCVCamera
 from .devices.display import DisplayDevice, PygameDisplay
 from .devices.filesystem import Filesystem
 from .devices.input import InputDevice, PygameInput
+from .devices.recognition import OnnxPokemonRecognizer, PokemonRecognizer
 from .devices.speaker import Speaker
 from .modes.base import Mode, ModeContext, ModeRequest
 from .modes.camera import CameraView
@@ -30,6 +31,7 @@ class App:
         filesystem: Filesystem | None = None,
         camera: Camera | None = None,
         speaker: Speaker | None = None,
+        pokemon_recognizer: PokemonRecognizer | None = None,
         frame_rate: int = 60,
     ):
         self.filesystem = filesystem or Filesystem()
@@ -38,6 +40,8 @@ class App:
             filesystem=self.filesystem,
             camera=camera or OpenCVCamera(),
             speaker=speaker or Speaker(),
+            pokemon_recognizer=pokemon_recognizer
+            or OnnxPokemonRecognizer(self.filesystem.assets_dir),
             default_background=self.filesystem.load_ui("bg.png"),
         )
 

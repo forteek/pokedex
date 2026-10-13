@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .camera import CapturedPhoto
+from .recognition import PokemonRecognition
 
 
 @dataclass(frozen=True)
@@ -14,6 +15,7 @@ class ImageAsset:
     is_thumbnail: bool = False
     is_music_cover: bool = False
     is_pokemon: bool = False
+    original_size: tuple[int, int] | None = None
 
 
 class Filesystem:
@@ -64,6 +66,64 @@ class Filesystem:
             if pokemon_id is not None
         }
 
+    def save_scan_result(
+        self,
+        photo_filename: str,
+        pokemon_id: int,
+        certainty: float,
+    ) -> None:
+        database_path = self.root_dir / "pokemon.db"
+        with sqlite3.connect(database_path) as connection:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS scan_results (
+                    photo_filename TEXT PRIMARY KEY,
+                    pokemon_id INTEGER NOT NULL,
+                    certainty REAL NOT NULL CHECK (certainty >= 0 AND certainty <= 1)
+                )
+                """
+            )
+            connection.execute(
+                """
+                INSERT INTO scan_results (photo_filename, pokemon_id, certainty)
+                VALUES (?, ?, ?)
+                ON CONFLICT(photo_filename) DO UPDATE SET
+                    pokemon_id = excluded.pokemon_id,
+                    certainty = excluded.certainty
+                """,
+                (photo_filename, pokemon_id, certainty),
+            )
+
+    def load_scan_result(self, photo_filename: str) -> PokemonRecognition | None:
+        database_path = self.root_dir / "pokemon.db"
+        database_uri = f"{database_path.as_uri()}?mode=ro"
+        with sqlite3.connect(database_uri, uri=True) as connection:
+            table = connection.execute(
+                """
+                SELECT 1 FROM sqlite_master
+                WHERE type = 'table' AND name = 'scan_results'
+                """
+            ).fetchone()
+            if table is None:
+                return None
+            row = connection.execute(
+                """
+                SELECT scan_results.pokemon_id, pokemon.name, scan_results.certainty
+                FROM scan_results
+                LEFT JOIN pokemon ON pokemon.id = scan_results.pokemon_id
+                WHERE scan_results.photo_filename = ?
+                """,
+                (photo_filename,),
+            ).fetchone()
+        if row is None:
+            return None
+        pokemon_id, name, certainty = row
+        return PokemonRecognition(
+            pokemon_id=int(pokemon_id),
+            name=str(name or pokemon_id),
+            confidence=float(certainty),
+        )
+
     def pokemon_voice_path(self, category: str, name: str) -> Path:
         return self.assets_dir / "mp3" / category / f"{name}.mp3"
 
@@ -95,9 +155,17 @@ class Filesystem:
 
     def load_pokemon_asset(self, name: str) -> ImageAsset:
         path = self.png_dir / "pokemon" / name
+        data = path.read_bytes()
+        if data[:8] != b"\x89PNG\r\n\x1a\n" or len(data) < 24:
+            raise ValueError(f"Pokémon asset is not a valid PNG: {path}")
+        original_size = (
+            int.from_bytes(data[16:20], "big"),
+            int.from_bytes(data[20:24], "big"),
+        )
         return ImageAsset(
             f"pokemon/{name}",
-            path.read_bytes(),
+            data,
+            original_size=original_size,
             is_pokemon=True,
         )
 
