@@ -35,6 +35,10 @@ class Filesystem:
         path = self.png_dir / name
         return ImageAsset(name, path.read_bytes())
 
+    def load_ui(self, name: str) -> ImageAsset:
+        path = self.png_dir / "ui" / name
+        return ImageAsset(name, path.read_bytes())
+
     def load_backgrounds(self) -> dict[str, ImageAsset]:
         backgrounds_dir = self.png_dir / "backgrounds"
         return {
@@ -45,17 +49,23 @@ class Filesystem:
             for path in sorted(backgrounds_dir.glob("*.png"))
         }
 
-    def list_pokemon_primary_types(self) -> dict[int, str]:
+    def list_pokemon_types(self) -> dict[int, tuple[str | None, str | None]]:
         database_path = self.root_dir / "pokemon.db"
         with sqlite3.connect(f"{database_path.as_uri()}?mode=ro", uri=True) as connection:
             rows = connection.execute(
-                "SELECT id, primary_type FROM pokemon"
+                "SELECT id, primary_type, secondary_type FROM pokemon"
             ).fetchall()
         return {
-            int(pokemon_id): primary_type.lower()
-            for pokemon_id, primary_type in rows
-            if pokemon_id is not None and primary_type
+            int(pokemon_id): (
+                primary_type.strip().lower() if primary_type else None,
+                secondary_type.strip().lower() if secondary_type else None,
+            )
+            for pokemon_id, primary_type, secondary_type in rows
+            if pokemon_id is not None
         }
+
+    def pokemon_voice_path(self, category: str, name: str) -> Path:
+        return self.assets_dir / "mp3" / category / f"{name}.mp3"
 
     def list_music(self) -> list[str]:
         return sorted(path.name for path in self.music_dir.glob("*.mp3"))

@@ -16,10 +16,10 @@ class MenuOption:
 class Menu:
     def __init__(self, context: ModeContext):
         self.options = (
-            MenuOption("Camera", context.filesystem.load_image_asset("camera.png"), "camera"),
-            MenuOption("Music", context.filesystem.load_image_asset("music.png"), "music"),
-            MenuOption("Gallery", context.filesystem.load_image_asset("gallery.png"), "gallery"),
-            MenuOption("Pokedex", context.filesystem.load_image_asset("pokedex.png"), "pokedex"),
+            MenuOption("Camera", context.filesystem.load_ui("camera.png"), "camera"),
+            MenuOption("Music", context.filesystem.load_ui("music.png"), "music"),
+            MenuOption("Gallery", context.filesystem.load_ui("gallery.png"), "gallery"),
+            MenuOption("Pokedex", context.filesystem.load_ui("pokedex.png"), "pokedex"),
         )
         self.position = 0.0
         self._start_position = 0.0

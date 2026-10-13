@@ -24,4 +24,7 @@ pokedex = [
     "assets/png/backgrounds/*.png",
     "assets/png/pokemon/*.png",
     "assets/svg/*.svg",
+    "assets/mp3/names/*.mp3",
+    "assets/mp3/types/*.mp3",
+    "assets/mp3/flavor/*.mp3",
 ]

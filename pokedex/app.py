@@ -38,7 +38,7 @@ class App:
             filesystem=self.filesystem,
             camera=camera or OpenCVCamera(),
             speaker=speaker or Speaker(),
-            default_background=self.filesystem.load_image_asset("bg.png"),
+            default_background=self.filesystem.load_ui("bg.png"),
         )
 
         self._owns_pygame = input_device is None or display_device is None

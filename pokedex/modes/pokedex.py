@@ -16,14 +16,17 @@ class Pokedex:
     CELL_WIDTH = PANEL_SIZE[0] // COLUMNS
     CELL_HEIGHT = PANEL_SIZE[1] // VISIBLE_ROWS
     SCROLL_DURATION = 0.24
+    HOVER_NAME_DELAY = 0.5
     SPRITE_SIZE = 128
 
     def __init__(self, context: ModeContext):
         self.context = context
         self.pokemon = context.filesystem.list_pokemon()
         self.backgrounds = context.filesystem.load_backgrounds()
-        self.primary_types = context.filesystem.list_pokemon_primary_types()
+        self.pokemon_types = context.filesystem.list_pokemon_types()
         self.focused_index = 0
+        self._hover_elapsed = 0.0
+        self._hover_name_played = False
         self.scroll_position = 0.0
         self._scroll_start = 0.0
         self._scroll_target = 0.0
@@ -36,12 +39,15 @@ class Pokedex:
         return math.ceil(len(self.pokemon) / self.COLUMNS)
 
     def update(self, actions: frozenset[Action], delta_time: float) -> ModeRequest | None:
+        delta_time = max(delta_time, 0.0)
+        self.context.speaker.update()
         if Action.HOME in actions:
+            self.context.speaker.stop()
             return ModeRequest("menu")
         if not self.pokemon:
             return None
 
-        self._advance_scroll(max(delta_time, 0.0))
+        self._advance_scroll(delta_time)
         old_index = self.focused_index
         column = old_index % self.COLUMNS
         if Action.LEFT in actions and column > 0:
@@ -57,7 +63,83 @@ class Pokedex:
         if self.focused_index != old_index:
             self._retarget_scroll()
             self._refresh_asset_window()
+            self.context.speaker.fade_voice(
+                round(self.HOVER_NAME_DELAY * 1000)
+            )
+            self._hover_elapsed = 0.0
+            self._hover_name_played = False
+
+        if Action.CONFIRM in actions:
+            pokemon_id = self._focused_pokemon_id()
+            name_path = self.context.filesystem.pokemon_voice_path(
+                "names",
+                str(pokemon_id),
+            )
+            if (
+                self._hover_name_played
+                and self.context.speaker.is_voice_playing(name_path)
+            ):
+                self.context.speaker.queue_voice_sequence(
+                    self._focused_type_flavor_voices()
+                )
+            else:
+                self._play_focused_voice(include_name=not self._hover_name_played)
+            self._hover_name_played = True
+        elif not self._hover_name_played:
+            self._hover_elapsed += delta_time
+            if (
+                self._hover_elapsed >= self.HOVER_NAME_DELAY
+                and not self.context.speaker.is_sequence_active
+            ):
+                pokemon_id = self._focused_pokemon_id()
+                name_path = self.context.filesystem.pokemon_voice_path(
+                    "names",
+                    str(pokemon_id),
+                )
+                if name_path.is_file():
+                    self._hover_name_played = True
+                    self.context.speaker.play_voice(name_path)
         return None
+
+    def _focused_pokemon_id(self) -> int:
+        return int(Path(self.pokemon[self.focused_index]).stem)
+
+    def _play_focused_voice(self, include_name: bool) -> None:
+        pokemon_id = self._focused_pokemon_id()
+        paths = []
+        if include_name:
+            paths.append(
+                self.context.filesystem.pokemon_voice_path(
+                    "names",
+                    str(pokemon_id),
+                )
+            )
+        paths.extend(self._focused_type_flavor_voices())
+        self.context.speaker.play_voice_sequence(paths)
+
+    def _focused_type_flavor_voices(self) -> list[Path]:
+        pokemon_id = self._focused_pokemon_id()
+        primary_type, secondary_type = self.pokemon_types.get(
+            pokemon_id,
+            (None, None),
+        )
+        paths = []
+        if primary_type:
+            type_name = (
+                f"{primary_type}-{secondary_type}"
+                if secondary_type
+                else primary_type
+            )
+            paths.append(
+                self.context.filesystem.pokemon_voice_path("types", type_name)
+            )
+        paths.append(
+            self.context.filesystem.pokemon_voice_path(
+                "flavor",
+                str(pokemon_id),
+            )
+        )
+        return paths
 
     def _advance_scroll(self, delta_time: float) -> None:
         if self.scroll_position == self._scroll_target:
@@ -117,7 +199,8 @@ class Pokedex:
         self._render_gallery(display)
         focused = self.pokemon[self.focused_index]
         pokemon_id = int(Path(focused).stem)
-        primary_type = self.primary_types.get(pokemon_id, "grass")
+        primary_type = self.pokemon_types.get(pokemon_id, (None, None))[0]
+        primary_type = primary_type or "grass"
         background = self.backgrounds.get(primary_type)
         if background is None:
             background = self.backgrounds.get("grass")
@@ -134,6 +217,9 @@ class Pokedex:
             self._asset_for(focused),
             (sprite_x, sprite_y, self.SPRITE_SIZE, self.SPRITE_SIZE),
         )
+
+    def on_exit(self) -> None:
+        self.context.speaker.stop()
 
     def _render_gallery(self, display: DisplayDevice) -> None:
         first_visible_row = max(0, math.floor(self.scroll_position))

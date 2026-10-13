@@ -38,7 +38,7 @@ class MusicPlayer:
             if track_count
             else 0
         )
-        self.record = context.filesystem.load_image_asset("record.png")
+        self.record = context.filesystem.load_ui("record.png")
         self.position = 0.0
         self._start_position = 0.0
         self._target_position = 0
