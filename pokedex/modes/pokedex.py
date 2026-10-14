@@ -241,11 +241,11 @@ class Pokedex:
                     + (self.CELL_HEIGHT - size) // 2
                 )
                 if focused:
-                    display.draw_rect(
+                    display.draw_circle(
                         Panel.MAIN,
-                        (x - 4, y - 4, size + 8, size + 8),
+                        (x + size // 2, y + size // 2),
+                        size // 2 + 4,
                         (255, 214, 64),
-                        3,
                     )
                 display.draw_image(
                     Panel.MAIN,

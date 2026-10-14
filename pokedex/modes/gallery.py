@@ -1,4 +1,5 @@
 import math
+import random
 
 from ..devices.display import DisplayDevice, PANEL_SIZE, Panel
 from ..devices.filesystem import ImageAsset
@@ -16,10 +17,19 @@ class Gallery:
     CELL_HEIGHT = PANEL_SIZE[1] // VISIBLE_ROWS
     SCROLL_DURATION = 0.24
     PHOTO_TRANSITION_DURATION = 0.18
+    ROTATION_TRANSITION_DURATION = 0.2
 
     def __init__(self, context: ModeContext):
         self.context = context
         self.photos = context.filesystem.list_photos()
+        self._photo_angles = {
+            name: random.uniform(-10, 10)
+            for name in self.photos
+        }
+        self._current_photo_angles = dict(self._photo_angles)
+        if self.photos:
+            self._current_photo_angles[self.photos[0]] = 0.0
+        self._photo_angle_animations: dict[str, tuple[float, float, float]] = {}
         self.focused_index = 0
         self.scroll_position = 0.0
         self._scroll_start = 0.0
@@ -56,6 +66,14 @@ class Gallery:
             self.focused_index = old_index + self.COLUMNS
 
         if self.focused_index != old_index:
+            self._set_photo_angle_target(
+                self.photos[old_index],
+                self._photo_angles[self.photos[old_index]],
+            )
+            self._set_photo_angle_target(
+                self.photos[self.focused_index],
+                0.0,
+            )
             self._retarget_scroll()
             self._photo_transition_elapsed = 0.0
             self._refresh_asset_window()
@@ -82,10 +100,34 @@ class Gallery:
             if progress == 1:
                 self.scroll_position = self._scroll_target
 
+        self._advance_photo_angle_animations(delta_time)
+
         self._photo_transition_elapsed = min(
             self._photo_transition_elapsed + delta_time,
             self.PHOTO_TRANSITION_DURATION,
         )
+
+    def _set_photo_angle_target(self, photo_name: str, target: float) -> None:
+        current = self._current_photo_angles[photo_name]
+        if abs(current - target) < 0.01:
+            self._current_photo_angles[photo_name] = target
+            self._photo_angle_animations.pop(photo_name, None)
+            return
+        self._photo_angle_animations[photo_name] = (current, target, 0.0)
+
+    def _advance_photo_angle_animations(self, delta_time: float) -> None:
+        for photo_name, (start, target, elapsed) in tuple(
+            self._photo_angle_animations.items()
+        ):
+            elapsed = min(elapsed + delta_time, self.ROTATION_TRANSITION_DURATION)
+            progress = elapsed / self.ROTATION_TRANSITION_DURATION
+            eased = 3 * progress**2 - 2 * progress**3
+            self._current_photo_angles[photo_name] = start + (target - start) * eased
+            if progress >= 1:
+                self._current_photo_angles[photo_name] = target
+                del self._photo_angle_animations[photo_name]
+            else:
+                self._photo_angle_animations[photo_name] = (start, target, elapsed)
 
     def _retarget_scroll(self) -> None:
         focus_row = self.focused_index // self.COLUMNS
@@ -156,6 +198,7 @@ class Gallery:
                     break
 
                 is_focused = photo_index == self.focused_index
+                angle = self._current_photo_angles[self.photos[photo_index]]
                 image_size = (
                     (84, 56) if is_focused else self.THUMBNAIL_SIZE
                 )
@@ -164,19 +207,28 @@ class Gallery:
                     (row - self.scroll_position) * self.CELL_HEIGHT
                     + (self.CELL_HEIGHT - image_size[1]) // 2
                 )
+                display.draw_shadow(
+                    Panel.MAIN,
+                    (image_x, image_y, *image_size),
+                    angle=angle,
+                )
                 if is_focused:
                     display.draw_rect(
                         Panel.MAIN,
                         (image_x - 3, image_y - 3, image_size[0] + 6, image_size[1] + 6),
                         (255, 214, 64),
-                        3,
                     )
 
                 thumbnail = self._thumbnails[self.photos[photo_index]]
-                display.draw_image(
+                display.draw_rotated_image(
                     Panel.MAIN,
                     thumbnail,
-                    (image_x, image_y, *image_size),
+                    (
+                        image_x + image_size[0] // 2,
+                        image_y + image_size[1] // 2,
+                    ),
+                    image_size,
+                    angle,
                 )
 
         focused_photo = self._full_photos[self.focused_index]

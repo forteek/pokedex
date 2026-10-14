@@ -22,6 +22,7 @@ package = true
 pokedex = [
     "pokemon.db",
     "assets/png/*.png",
+    "assets/png/ui/*.png",
     "assets/png/backgrounds/*.png",
     "assets/png/pokemon/*.png",
     "assets/svg/*.svg",

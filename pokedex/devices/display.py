@@ -30,6 +30,17 @@ class DisplayDevice(Protocol):
         alpha: int = 255,
     ) -> None: ...
 
+    def draw_shadow(
+        self,
+        panel: Panel,
+        rect: Rect,
+        offset: tuple[int, int] = (2, 2),
+        blur_radius: int = 8,
+        spread: int = 1,
+        opacity: int = 84,
+        angle: float = 0,
+    ) -> None: ...
+
     def draw_rotated_image(
         self,
         panel: Panel,
@@ -47,6 +58,14 @@ class DisplayDevice(Protocol):
         rect: Rect,
         color: tuple[int, int, int],
         width: int = 0,
+    ) -> None: ...
+
+    def draw_circle(
+        self,
+        panel: Panel,
+        center: tuple[int, int],
+        radius: int,
+        color: tuple[int, int, int],
     ) -> None: ...
 
     def draw_text(
@@ -72,6 +91,14 @@ class PygameDisplay:
         }
         self._images: OrderedDict[tuple[str, str], pygame.Surface] = OrderedDict()
         self._scaled_images: OrderedDict[tuple[str, str, int, int], pygame.Surface] = OrderedDict()
+        self._rotated_thumbnails: OrderedDict[
+            tuple[str, int, int, float], pygame.Surface
+        ] = OrderedDict()
+        self._circles: dict[tuple[int, tuple[int, int, int]], pygame.Surface] = {}
+        self._shadows: dict[
+            tuple[int, int, tuple[int, int], int, int, int],
+            tuple[pygame.Surface, int],
+        ] = {}
         self._fonts: dict[int, pygame.font.Font] = {}
 
     def clear(self, panel: Panel, color: tuple[int, int, int]) -> None:
@@ -98,6 +125,66 @@ class PygameDisplay:
             scaled = faded
         self.panels[panel].blit(scaled, (x, y))
 
+    def draw_shadow(
+        self,
+        panel: Panel,
+        rect: Rect,
+        offset: tuple[int, int] = (2, 2),
+        blur_radius: int = 8,
+        spread: int = 1,
+        opacity: int = 84,
+        angle: float = 0,
+    ) -> None:
+        import cv2
+        import numpy as np
+
+        x, y, width, height = rect
+        key = (width, height, offset, blur_radius, spread, opacity)
+        cached = self._shadows.get(key)
+        if cached is None:
+            padding = int(blur_radius * 1.5) + spread + max(
+                abs(offset[0]), abs(offset[1])
+            )
+            mask = np.zeros(
+                (height + 2 * padding, width + 2 * padding),
+                dtype=np.uint8,
+            )
+            left = padding + offset[0] - spread
+            top = padding + offset[1] - spread
+            cv2.rectangle(
+                mask,
+                (left, top),
+                (left + width + 2 * spread - 1, top + height + 2 * spread - 1),
+                255,
+                thickness=cv2.FILLED,
+            )
+            mask = cv2.GaussianBlur(
+                mask,
+                (0, 0),
+                sigmaX=blur_radius / 2,
+                sigmaY=blur_radius / 2,
+                borderType=cv2.BORDER_CONSTANT,
+            )
+            rgba = np.zeros((*mask.shape, 4), dtype=np.uint8)
+            rgba[:, :, 3] = (mask.astype(np.uint16) * opacity // 255).astype(np.uint8)
+            shadow = pygame.image.fromstring(
+                rgba.tobytes(),
+                (mask.shape[1], mask.shape[0]),
+                "RGBA",
+            ).convert_alpha()
+            cached = (shadow, padding)
+            self._shadows[key] = cached
+
+        shadow, padding = cached
+        if angle:
+            shadow = pygame.transform.rotozoom(shadow, angle, 1.0)
+            rect = shadow.get_rect(
+                center=(x + width // 2, y + height // 2)
+            )
+            self.panels[panel].blit(shadow, rect)
+        else:
+            self.panels[panel].blit(shadow, (x - padding, y - padding))
+
     def draw_rotated_image(
         self,
         panel: Panel,
@@ -107,9 +194,81 @@ class PygameDisplay:
         angle: float,
     ) -> None:
         scaled = self._scaled_image(image_asset, size)
-        rotated = pygame.transform.rotate(scaled, angle)
+        rotated = None
+        if image_asset.is_thumbnail:
+            key = (image_asset.name, size[0], size[1], angle)
+            rotated = self._rotated_thumbnails.get(key)
+            if rotated is not None:
+                self._rotated_thumbnails.move_to_end(key)
+        if rotated is None:
+            rotated = (
+                self._supersampled_rotate(scaled, angle)
+                if image_asset.is_thumbnail
+                else pygame.transform.rotozoom(scaled, angle, 1.0)
+            )
+            if image_asset.is_thumbnail:
+                self._rotated_thumbnails[key] = rotated
+                while len(self._rotated_thumbnails) > 33:
+                    self._rotated_thumbnails.popitem(last=False)
         rect = rotated.get_rect(center=center)
         self.panels[panel].blit(rotated, rect)
+
+    @staticmethod
+    def _supersampled_rotate(
+        image: pygame.Surface,
+        angle: float,
+        factor: int = 6,
+    ) -> pygame.Surface:
+        width, height = image.get_size()
+        enlarged = pygame.transform.smoothscale(
+            image,
+            (width * factor, height * factor),
+        )
+        rotated = pygame.transform.rotozoom(enlarged, angle, 1.0)
+        output_size = (
+            max(1, round(rotated.get_width() / factor)),
+            max(1, round(rotated.get_height() / factor)),
+        )
+        return PygameDisplay._alpha_aware_smoothscale(rotated, output_size)
+
+    @staticmethod
+    def _alpha_aware_smoothscale(
+        image: pygame.Surface,
+        size: tuple[int, int],
+    ) -> pygame.Surface:
+        import numpy as np
+
+        source_width, source_height = image.get_size()
+        rgba = np.frombuffer(
+            pygame.image.tostring(image, "RGBA"),
+            dtype=np.uint8,
+        ).reshape((source_height, source_width, 4)).astype(np.uint16)
+        alpha = rgba[:, :, 3:4]
+        rgba[:, :, :3] = (rgba[:, :, :3] * alpha + 127) // 255
+        premultiplied = pygame.image.fromstring(
+            rgba.astype(np.uint8).tobytes(),
+            image.get_size(),
+            "RGBA",
+        )
+        scaled = pygame.transform.smoothscale(premultiplied, size)
+
+        rgba = np.frombuffer(
+            pygame.image.tostring(scaled, "RGBA"),
+            dtype=np.uint8,
+        ).reshape((size[1], size[0], 4)).astype(np.uint16)
+        alpha = rgba[:, :, 3:4]
+        visible = alpha[:, :, 0] > 0
+        rgb = rgba[:, :, :3]
+        rgb[visible] = np.minimum(
+            (rgb[visible] * 255 + alpha[visible] // 2) // alpha[visible],
+            255,
+        )
+        rgba[:, :, :3] = rgb
+        return pygame.image.fromstring(
+            rgba.astype(np.uint8).tobytes(),
+            size,
+            "RGBA",
+        ).convert_alpha()
 
     def _scaled_image(
         self,
@@ -183,6 +342,35 @@ class PygameDisplay:
         width: int = 0,
     ) -> None:
         pygame.draw.rect(self.panels[panel], color, rect, width)
+
+    def draw_circle(
+        self,
+        panel: Panel,
+        center: tuple[int, int],
+        radius: int,
+        color: tuple[int, int, int],
+    ) -> None:
+        key = (radius, color)
+        circle = self._circles.get(key)
+        if circle is None:
+            diameter = radius * 2 + 1
+            factor = 4
+            high_resolution = pygame.Surface(
+                (diameter * factor, diameter * factor),
+                pygame.SRCALPHA,
+            )
+            pygame.draw.circle(
+                high_resolution,
+                color,
+                (diameter * factor // 2, diameter * factor // 2),
+                radius * factor,
+            )
+            circle = self._alpha_aware_smoothscale(
+                high_resolution,
+                (diameter, diameter),
+            )
+            self._circles[key] = circle
+        self.panels[panel].blit(circle, circle.get_rect(center=center))
 
     def draw_text(
         self,

@@ -207,6 +207,16 @@ class MusicPlayer:
                 center_y,
             )
             if transition.cover is not None:
+                cover_rect = (
+                    center[0] - self.COVER_SIZE[0] // 2,
+                    center[1] - self.COVER_SIZE[1] // 2,
+                    *self.COVER_SIZE,
+                )
+                display.draw_shadow(
+                    Panel.CONTEXT,
+                    cover_rect,
+                    angle=transition.angle,
+                )
                 display.draw_rotated_image(
                     Panel.CONTEXT,
                     transition.cover,
@@ -243,7 +253,9 @@ class MusicPlayer:
             track_index = carousel_index % len(self.tracks)
             cover = self._covers.get(track_index)
             if cover is not None:
-                display.draw_image(Panel.MAIN, cover, (round(x), y, size, size))
+                cover_rect = (round(x), y, size, size)
+                display.draw_shadow(Panel.MAIN, cover_rect)
+                display.draw_image(Panel.MAIN, cover, cover_rect)
 
     def on_exit(self) -> None:
         self.context.speaker.stop()
