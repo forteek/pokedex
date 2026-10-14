@@ -5,3 +5,4 @@ uv.lock
 **/__pycache__
 pokedex/files/photos
 pokedex/files/music
+**/.DS_Store
